@@ -12,7 +12,7 @@ def main():
     if args.database == 'depmap':
         if args.source == 'dataverse':
             print("Downloading data from Dataverse")
-            m = manager.DataverseDepMap(manager_path=args.directory, verbose=True)
+            m = manager.DataverseBroadDepMap(manager_path=args.directory, verbose=True)
             m.download_reformatted_data()
             m.write_config(m.cfig_path, m.parser)
         
@@ -30,15 +30,15 @@ def main():
             raise ValueError("Invalid source. Please specify either 'dataverse' or 'depmap'")
     
     if args.database == 'coessentiality':
-        if args.source == 'dataverse':
-            print("Downloading data from Dataverse")
-            m = manager.DataverseCoessentiality(manager_path=args.directory, verbose=True)
-            m.download_raw_files()
-            m.coessentiality_autoformat()
-            m.write_config(m.cfig_path, m.parser)
-        
-        else:
-            raise ValueError("Invalid source. Coessentiality data is only available on `dataverse`!")
+        raise ValueError("Coessentiality data is currently experimental and not supported in this version.")
+        # if args.source == 'dataverse':
+        #     print("Downloading data from Dataverse")
+        #     m = manager.DataverseCoessentiality(manager_path=args.directory, verbose=True)
+        #     m.download_raw_files()
+        #     m.coessentiality_autoformat()
+        #     m.write_config(m.cfig_path, m.parser)
+        # else:
+            # raise ValueError("Invalid source. Coessentiality data is only available on `dataverse`!")
 
 
 if __name__ == "__main__":

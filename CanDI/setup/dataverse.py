@@ -12,15 +12,6 @@ CANDI_DATAVERSE_DOI = 'doi:10.7910/DVN/JIAT0H'
 
 ### Datasets Metadata ###
 
-coessentiality_dataset_names = [
-    'genes',
-    # 10273535
-    'GLS_p',
-    # 10273534
-    'GLS_sign',
-    # 10273533
-]
-
 depmap_dataset_names = [
     'CCLE_expression',
     'CCLE_fusions',
@@ -34,10 +25,6 @@ depmap_dataset_names = [
 ]
 
 name2type = {
-    # Coessentiality datasets
-    'genes': 'txt',
-    'GLS_p': 'npy',
-    'GLS_sign': 'npy',
     # DepMap datasets
     'CCLE_expression': 'csv',
     'CCLE_fusions': 'csv',
@@ -46,6 +33,7 @@ name2type = {
     'CCLE_RNAseq_reads': 'csv',
     'CRISPR_gene_dependency': 'csv',
     'CRISPR_gene_effect': 'csv',
+    'Repurposing_fold_change_viability': 'h5ad.gz',
     'sample_info': 'csv',
     'README': 'txt',
 }
@@ -63,6 +51,7 @@ name2id = {
     'CCLE_RNAseq_reads': 8076859,
     'CRISPR_gene_dependency': 8076863,
     'CRISPR_gene_effect': 8076860,
+    'Repurposing_fold_change_viability': 11854823,
     'sample_info': 10085764,
     'README': 8151459,
 }
@@ -169,11 +158,3 @@ class DepMapDownloader(Downloader):
     
     def download(self, path, return_type=None):
         return self.run(path, depmap_dataset_names, return_type)
-
-
-class CoessentialityDownloader(Downloader):
-    def __init__(self):
-        super().__init__()
-    
-    def download(self, path, return_type=None):
-        return self.run(path, coessentiality_dataset_names, return_type)
