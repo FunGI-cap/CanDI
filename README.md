@@ -20,7 +20,7 @@ pip install PyCanDI && candi-install
 
 Downloaded and formatted datasets would organize this way:
 
-``` 
+``` text
 .
 ├── config.ini # modified after Installation 
 ├── depmap
@@ -32,8 +32,6 @@ Downloaded and formatted datasets would organize this way:
 │   ├── CRISPR_gene_dependency.csv
 │   ├── CRISPR_gene_effect.csv
 │   └── sample_info.csv
-├── genes
-│   └── gene_info.csv
 └── locations
     └── merged_locations.csv
 ```
@@ -55,18 +53,18 @@ from CanDI import candi
 
 ### CanDI Objects
 
--   `data` : Container for all candi datasets. All access to datasets go
+- `data` : Container for all candi datasets. All access to datasets go
     through data object.
--   `Gene` : Provides cross dataset indexing from the gene perspective.
--   `CellLine` : Provides cross dataset indexing from the cell line
+- `Gene` : Provides cross dataset indexing from the gene perspective.
+- `CellLine` : Provides cross dataset indexing from the cell line
     perspective.
--   `Cancer` : Provides cross dataset indexing by a group of cell lines
+- `Cancer` : Provides cross dataset indexing by a group of cell lines
     that are all the same tissue.
--   `Organelle`: Provides cross dataset indexing for a group of genes
+- `Organelle`: Provides cross dataset indexing for a group of genes
     whose proteins localize to the same organelle.
--   `CellLineCluster` : Provides cross dataset indexing for a group of
+- `CellLineCluster` : Provides cross dataset indexing for a group of
     user defined cell lines.
--   `GeneCluster` : Provides cross dataset indexing for a group of user
+- `GeneCluster` : Provides cross dataset indexing for a group of user
     defined genes.
 
 ### Demos
