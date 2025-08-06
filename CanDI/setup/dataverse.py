@@ -20,6 +20,7 @@ depmap_dataset_names = [
     'CCLE_RNAseq_reads',
     'CRISPR_gene_dependency',
     'CRISPR_gene_effect',
+    'PRISM_fold_change_viability',
     'sample_info',
     'README',
 ]
@@ -33,7 +34,7 @@ name2type = {
     'CCLE_RNAseq_reads': 'csv',
     'CRISPR_gene_dependency': 'csv',
     'CRISPR_gene_effect': 'csv',
-    'Repurposing_fold_change_viability': 'h5ad.gz',
+    'PRISM_fold_change_viability': 'h5ad.gz',
     'sample_info': 'csv',
     'README': 'txt',
 }
@@ -51,7 +52,7 @@ name2id = {
     'CCLE_RNAseq_reads': 8076859,
     'CRISPR_gene_dependency': 8076863,
     'CRISPR_gene_effect': 8076860,
-    'Repurposing_fold_change_viability': 11854823,
+    'PRISM_fold_change_viability': 11854823,
     'sample_info': 10085764,
     'README': 8151459,
 }
