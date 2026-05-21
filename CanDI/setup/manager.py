@@ -65,10 +65,11 @@ class Manager(object):
             f.close()
 
 
-class DataverseDepMap(Manager):
+class DataverseBroadDepMap(Manager):
     def __init__(self, manager_path='auto', cfig_path='auto', verbose=False):
         super().__init__(manager_path, cfig_path, verbose)
-        self.release = '21Q4' # default release uploded to CanDI dataverse
+        self.depmap_release = '21Q4' # default release uploded to CanDI dataverse
+        self.prism_release = '24Q2'  # default release uploded to CanDI dataverse
         self.download_source = 'dataverse, ' + dataverse.CANDI_DATAVERSE_DOI
     
     def download_reformatted_data(self):
@@ -118,7 +119,7 @@ class BroadDepMap(Manager):
         super().__init__(manager_path, cfig_path, verbose)
         self.download_source = 'Broad DepMap, https://depmap.org/'
         
-    def get_depmap_info(self, release="latest"):
+    def get_depmap_info(self, depmap_release="latest"):
 
         depmap = self.parser["download_urls"]["depmap"]
         print("Getting download information from DepMap")
@@ -127,7 +128,7 @@ class BroadDepMap(Manager):
         print("GET Successful")
 
         self.response = response.json()
-        self.release = self.get_release(release)
+        self.depmap_release = self.get_release(depmap_release)
         self.download_info, self.depmap_files = self.parse_release()
         self.parser["depmap_urls"] = self.download_info
         self.parser["depmap_files"] = self.depmap_files
@@ -138,7 +139,7 @@ class BroadDepMap(Manager):
         depmap_files = {}
         for table in self.response["table"]:
 
-            if self.release == table["releaseName"] and table["downloadUrl"]:
+            if self.depmap_release == table["releaseName"] and table["downloadUrl"]:
 
                 download_urls[table["fileName"]] = table["downloadUrl"]
                 depmap_files[self.format_filename(table["fileName"])] = table["fileName"]
@@ -157,12 +158,12 @@ class BroadDepMap(Manager):
 
         return release_info["releaseName"]
 
-    def format_filename(self, filename, release):
+    def format_filename(self, filename, depmap_release):
 
         # set candi_name to the filename without the extension
         candi_name = filename.split(".")[0]
 
-        if release == "21Q4":
+        if depmap_release == "21Q4":
             if "CRISPR_" in candi_name:
                 candi_name = candi_name[len("CRISPR_"):]
             elif "CCLE_" in candi_name:
@@ -258,9 +259,9 @@ class BroadDepMap(Manager):
                 df = pd.read_csv(v, low_memory=False, memory_map=True)
                 self.format_depmap_data(df, v)
 
-    def format_depmap_data(self, df, path, release):
+    def format_depmap_data(self, df, path, depmap_release):
 
-        if release == "21Q4":
+        if depmap_release == "21Q4":
             if ("AAAS (8086)" in df.columns) or ("AAAS (ENSG00000094914)" in df.columns):
 
                 df.rename(columns = lambda s: s.split(" ")[0], inplace=True)
@@ -318,87 +319,87 @@ class SangerDepMap(Manager):
         pass
 
 
-class DataverseCoessentiality(Manager):
-    def __init__(self, manager_path='auto', cfig_path='auto', verbose=False):
-        super().__init__(manager_path, cfig_path, verbose)
-        self.download_source = 'Dataverse'
-        self.reference = 'https://github.com/kundajelab/coessentiality'
-        self.verbose = verbose
+# class DataverseCoessentiality(Manager):
+#     def __init__(self, manager_path='auto', cfig_path='auto', verbose=False):
+#         super().__init__(manager_path, cfig_path, verbose)
+#         self.download_source = 'Dataverse'
+#         self.reference = 'https://github.com/kundajelab/coessentiality'
+#         self.verbose = verbose
     
-    def download_raw_files(self):
-        if not os.path.exists(self.manager_path + '/data/'):
-            os.makedirs(self.manager_path + '/data/')
+#     def download_raw_files(self):
+#         if not os.path.exists(self.manager_path + '/data/'):
+#             os.makedirs(self.manager_path + '/data/')
 
-        if not os.path.exists(self.manager_path + '/data/coessentiality/'):
-            os.makedirs(self.manager_path + '/data/coessentiality/')
+#         if not os.path.exists(self.manager_path + '/data/coessentiality/'):
+#             os.makedirs(self.manager_path + '/data/coessentiality/')
         
-        session = dataverse.CoessentialityDownloader()
-        urls, file_names = session.download(
-            self.manager_path + '/data/coessentiality/',
-            return_type= ["url", "name"]
-        )
+#         session = dataverse.CoessentialityDownloader()
+#         urls, file_names = session.download(
+#             self.manager_path + '/data/coessentiality/',
+#             return_type= ["url", "name"]
+#         )
 
-        self.urls = urls
-        self.file_names = file_names
+#         self.urls = urls
+#         self.file_names = file_names
 
-    def _load_coessentiality_matrix(self):
-        data_dir = f'{self.manager_path}/data/coessentiality'
+#     def _load_coessentiality_matrix(self):
+#         data_dir = f'{self.manager_path}/data/coessentiality'
 
-        gene_names = pd.read_csv(
-            f'{data_dir}/genes.txt',header=None,names=['gene_name']
-        )['gene_name']
+#         gene_names = pd.read_csv(
+#             f'{data_dir}/genes.txt',header=None,names=['gene_name']
+#         )['gene_name']
         
-        GLS_sign = np.load(f'{data_dir}/GLS_sign.npy')
-        GLS_p = np.load(f'{data_dir}/GLS_p.npy')
+#         GLS_sign = np.load(f'{data_dir}/GLS_sign.npy')
+#         GLS_p = np.load(f'{data_dir}/GLS_p.npy')
         
-        self.matrix = pl.from_dataframe(
-            pd.DataFrame((-1*np.log10(GLS_p)) * GLS_sign, columns = gene_names, index = gene_names).reset_index()
-        )
+#         self.matrix = pl.from_dataframe(
+#             pd.DataFrame((-1*np.log10(GLS_p)) * GLS_sign, columns = gene_names, index = gene_names).reset_index()
+#         )
 
-    def _get_coessentiality_df(self, pvalue_threshold = 10**-3):
-        df = self.matrix.melt('gene_name')
-        df.columns = ['gene_1','gene_2','coessentiality']
-        df = df.filter(~(pl.col('gene_1') == pl.col('gene_2')))
-        df = df.filter(pl.col('coessentiality') > -np.log10(pvalue_threshold))
+#     def _get_coessentiality_df(self, pvalue_threshold = 10**-3):
+#         df = self.matrix.melt('gene_name')
+#         df.columns = ['gene_1','gene_2','coessentiality']
+#         df = df.filter(~(pl.col('gene_1') == pl.col('gene_2')))
+#         df = df.filter(pl.col('coessentiality') > -np.log10(pvalue_threshold))
         
-        self.df = df
-        self.pvalue_threshold = pvalue_threshold
+#         self.df = df
+#         self.pvalue_threshold = pvalue_threshold
 
-    def coessentiality_autoformat(self):
+#     def coessentiality_autoformat(self):
         
-        coessentiality_matrix_path = f'{self.manager_path}/data/coessentiality/coessentiality_matrix.csv'
-        coessentiality_df_path = f'{self.manager_path}/data/coessentiality/coessentiality_df.csv'
+#         coessentiality_matrix_path = f'{self.manager_path}/data/coessentiality/coessentiality_matrix.csv'
+#         coessentiality_df_path = f'{self.manager_path}/data/coessentiality/coessentiality_df.csv'
 
-        # Check if the data has already been formatted or run the formatting
-        if os.path.exists(coessentiality_matrix_path):
-            if self.verbose: print("coessentiality_matrix.csv already exists")
+#         # Check if the data has already been formatted or run the formatting
+#         if os.path.exists(coessentiality_matrix_path):
+#             if self.verbose: print("coessentiality_matrix.csv already exists")
         
-        else:
-            if self.verbose: print("Building Coessentiality Matrix ...", end=' ')
-            self._load_coessentiality_matrix()
-            self.matrix.to_pandas().to_csv(coessentiality_matrix_path)
-            if self.verbose: print("Done!")
+#         else:
+#             if self.verbose: print("Building Coessentiality Matrix ...", end=' ')
+#             self._load_coessentiality_matrix()
+#             self.matrix.to_pandas().to_csv(coessentiality_matrix_path)
+#             if self.verbose: print("Done!")
         
-        if os.path.exists(coessentiality_df_path):
-            if self.verbose: print("coessentiality_df.csv already exists")
+#         if os.path.exists(coessentiality_df_path):
+#             if self.verbose: print("coessentiality_df.csv already exists")
         
-        else:
-            if self.verbose: print("Building Coessentiality DataFrame ...", end=' ')
-            self._get_coessentiality_df()
-            self.df.to_pandas().to_csv(coessentiality_df_path)
-            if self.verbose: print("Done!")
+#         else:
+#             if self.verbose: print("Building Coessentiality DataFrame ...", end=' ')
+#             self._get_coessentiality_df()
+#             self.df.to_pandas().to_csv(coessentiality_df_path)
+#             if self.verbose: print("Done!")
         
-        # Update the config file
-        self.parser['data_paths'].update({
-            'coessentiality': 'data/coessentiality/'
-        })
+#         # Update the config file
+#         self.parser['data_paths'].update({
+#             'coessentiality': 'data/coessentiality/'
+#         })
 
-        self.parser['formatted'].update({
-            'coessentiality_matrix.csv': coessentiality_matrix_path,
-            'coessentiality_df.csv': coessentiality_df_path
-        })
+#         self.parser['formatted'].update({
+#             'coessentiality_matrix.csv': coessentiality_matrix_path,
+#             'coessentiality_df.csv': coessentiality_df_path
+#         })
         
-        self.parser['depmap_files'].update({
-            'coessentiality': coessentiality_df_path,
-            'coessentiality_matrix': coessentiality_matrix_path,
-        })
+#         self.parser['depmap_files'].update({
+#             'coessentiality': coessentiality_df_path,
+#             'coessentiality_matrix': coessentiality_matrix_path,
+#         })

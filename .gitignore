@@ -2,6 +2,7 @@ CanDI/misc.py
 CanDI/setup/data/depmap
 CanDI/setup/data/ctrp
 CanDI/setup/data/coessentiality
+CanDI/pipelines/coessentiality
 
 *.swp
 tests.py
