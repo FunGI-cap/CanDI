@@ -5,7 +5,7 @@ import anndata as ad
 from tqdm import tqdm
 
 LATEST_VERSION = "26Q1"
-URLTABLE = pd.read_csv('https://depmap.org/portal/api/download/files')
+FILES_URL = 'https://depmap.org/portal/api/download/files'
 
 
 class DepMapAPI:
@@ -18,7 +18,8 @@ class DepMapAPI:
         self.save_dir = save_dir + f"/{version}"
 
     def _list_depmap_urls(self, subset=None):
-        urls = URLTABLE.set_index('filename').query(f'release.str.contains("DepMap Public {self.version}")')
+        files_table = pd.read_csv(FILES_URL)
+        urls = files_table.set_index('filename').query(f'release.str.contains("DepMap Public {self.version}")')
         if subset is not None:
             return urls[urls.index.str.contains(subset)]
         else:
