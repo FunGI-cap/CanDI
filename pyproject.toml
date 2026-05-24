@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11,<4.0"
 dependencies = [
     "pandas",
-    "configparser",
+    "anndata",
     "requests",
     "tqdm",
 ]

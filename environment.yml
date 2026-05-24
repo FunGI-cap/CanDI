@@ -1,9 +1,8 @@
 name: candi
 dependencies:
  - python>=3.11,<4.0
- - pandas
+ - pandas<3.0
  - numpy
- - anndata
  - polars
  - requests
  - tqdm
