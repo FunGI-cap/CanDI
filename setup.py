@@ -8,8 +8,6 @@ long_description = (this_directory / "README.md").read_text()
 setup(
     name='PyCanDI',
     description='A cancer data integration package',
-    use_scm_version={'fallback_version': '0.3.0'},
-    
     packages=find_packages(exclude=['tests', 'test_*']),
     
     long_description=long_description,

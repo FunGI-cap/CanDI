@@ -3,11 +3,10 @@ dependencies:
  - python>=3.11,<4.0
  - pandas
  - numpy
+ - anndata
  - polars
- - configparser
  - requests
  - tqdm
  - pip
  - pip:
-   - pydeseq2
-   - adpbulk
+   - uv
