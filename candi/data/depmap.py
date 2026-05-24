@@ -1,7 +1,9 @@
 import os
 import subprocess
-import pandas as pd
+from typing import Any
+
 import anndata as ad
+import pandas as pd
 from tqdm import tqdm
 
 LATEST_VERSION = "26Q1"
@@ -83,30 +85,25 @@ class DepMapData:
     """
 
     class DataNamespace:
-        """Namespace object for accessing loaded datasets under .data with type hints for autocomplete."""
-        def __init__(self, parent):
-            self._parent = parent
+        """Namespace object for dataset access under `.data`."""
 
-        ## DepMap main datasets ##
-        
-        # meta data
+        __slots__ = ("_parent",)
+
+        def __init__(self, parent: "DepMapData") -> None:
+            object.__setattr__(self, "_parent", parent)
+
+        # DepMap main datasets
         Model: pd.DataFrame
-        # omics data
         OmicsExpression: pd.DataFrame
         OmicsSomaticMutations: pd.DataFrame
         OmicsSomaticMutationsMatrixDamaging: pd.DataFrame
         OmicsCNGeneWGS: pd.DataFrame
         OmicsProteinAbundance: pd.DataFrame
-        # crispr data
         CRISPRGeneDependency: pd.DataFrame
         CRISPRGeneEffect: pd.DataFrame
-        # PRISM drug sensitivity data
         CRISPRScreenMap: ad.AnnData
-        # Proteomic data
-        
 
-
-        def __getattr__(self, name):
+        def __getattr__(self, name: str) -> Any:
             if name in self._parent._datasets:
                 return self._parent._datasets[name]
             if name in self._parent._paths:
@@ -114,6 +111,33 @@ class DepMapData:
                     f"Dataset '{name}' is available but not loaded. Call `.load('{name}')` first."
                 )
             raise AttributeError(f"No dataset named '{name}' defined.")
+
+        def __setattr__(self, name: str, value: Any) -> None:
+            if name == "_parent":
+                object.__setattr__(self, name, value)
+                return
+            self.add(name=name, dataset=value, overwrite=True)
+
+        def __dir__(self):
+            return sorted(
+                set(super().__dir__())
+                | set(self._parent._paths)
+                | set(self._parent._datasets)
+            )
+
+        def add(self, name: str, dataset: Any, overwrite: bool = False) -> None:
+            """Add a dataset to this namespace."""
+            if not name or not isinstance(name, str):
+                raise ValueError("Dataset name must be a non-empty string.")
+            if not name.isidentifier():
+                raise ValueError(
+                    f"Dataset name '{name}' is not a valid Python identifier for attribute access."
+                )
+            if name in self._parent._datasets and not overwrite:
+                raise ValueError(
+                    f"Dataset '{name}' is already loaded. Pass overwrite=True to replace it."
+                )
+            self._parent._datasets[name] = dataset
 
     def __init__(self, data_dir, version=LATEST_VERSION):
         self.data_dir = data_dir
@@ -266,7 +290,11 @@ class DepMapData:
 
     def list_available(self):
         """List all available datasets for this version."""
-        return list(self._paths.keys())
+        return list(dict.fromkeys([*self._paths.keys(), *self._datasets.keys()]))
+
+    def add_dataset(self, name, dataset, overwrite=False):
+        """Add a user-provided dataset to the in-memory namespace."""
+        self.data.add(name=name, dataset=dataset, overwrite=overwrite)
 
     def get(self, name):
         """Retrieve dataset if already loaded, otherwise prompt to load it."""
