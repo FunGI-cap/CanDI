@@ -67,7 +67,6 @@ class DepMapAPI:
             "OmicsSomaticMutationsMatrixDamaging.csv",
             "OmicsCNGeneWGS.csv",
             "CRISPRGeneDependency.csv",
-            "CRISPRScreenMap.csv",
             "CRISPRGeneEffect.csv",
             "OmicsCNSegmentsWGS.csv"
         ]
@@ -98,10 +97,8 @@ class DepMapData:
         OmicsSomaticMutations: pd.DataFrame
         OmicsSomaticMutationsMatrixDamaging: pd.DataFrame
         OmicsCNGeneWGS: pd.DataFrame
-        OmicsProteinAbundance: pd.DataFrame
         CRISPRGeneDependency: pd.DataFrame
         CRISPRGeneEffect: pd.DataFrame
-        CRISPRScreenMap: ad.AnnData
 
         def __getattr__(self, name: str) -> Any:
             if name in self._parent._datasets:
@@ -169,9 +166,7 @@ class DepMapData:
             "OmicsCNSegmentsWGS": os.path.join(base, "OmicsCNSegmentsWGS.csv.gz"),
             "CRISPRGeneDependency": os.path.join(base, "CRISPRGeneDependency.csv.gz"),
             "CRISPRGeneEffect": os.path.join(base, "CRISPRGeneEffect.csv.gz"),
-            "CRISPRScreenMap": os.path.join(base, "CRISPRScreenMap.csv.gz"),
             "PRISMDrugSensitivity": os.path.join(self.data_dir, "PRISM_fold_change_viability.h5ad.gz"),
-            "OmicsProteinAbundance": os.path.join(self.data_dir, "CCLE_protein_quantitation.tab")
         }
 
     def _check_paths_exist(self):
@@ -223,19 +218,6 @@ class DepMapData:
 
                 data = df.copy()
         
-        elif name in {
-            "OmicsProteinAbundance",
-            }:
-            if engine == 'polars':
-                # NotImplementedError
-                raise NotImplementedError("Polars engine is not yet implemented for loading datasets.")
-            elif engine == 'pandas':
-                df = pd.read_csv(path,  sep='\t', index_col=1, header=0).drop(columns=['UniprotID','EntrezID']).T
-                df.index.name = "ModelID"
-                df.columns.name = None
-
-                data = df.copy()
-
         elif name in {
             "OmicsExpression","OmicsCNGeneWGS",
             "OmicsSomaticMutationsMatrixDamaging",
