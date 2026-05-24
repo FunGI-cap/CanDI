@@ -10,8 +10,6 @@
 
 CanDI is now available on [PyPI](https://pypi.org/project/PyCanDI/) and
 can also be installed directly from the Git repository with pip or uv.
-After installation, run `candi-install` to download stable datasets from
-[Dataverse](https://doi.org/10.7910/DVN/JIAT0H).
 
 ``` bash
 # Install from PyPI with pip
@@ -25,7 +23,12 @@ pip install git+https://github.com/FunGI-cap/CanDI.git
 
 # Install from the Git repository with uv
 uv pip install git+https://github.com/FunGI-cap/CanDI.git
+```
 
+After installation, run `candi-install` to download stable datasets from
+[Dataverse](https://doi.org/10.7910/DVN/JIAT0H).
+
+``` bash
 # Download datasets after installation
 candi-install
 ```
