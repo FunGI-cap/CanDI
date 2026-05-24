@@ -1,9 +1,34 @@
 [build-system]
-requires = ["setuptools>=61", "setuptools-scm[toml]>=8"]
+requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
+name = "PyCanDI"
 version = "0.3.0"
+description = "A cancer data integration package"
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "pandas",
+    "configparser",
+    "requests",
+    "tqdm",
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
 
-[tool.setuptools_scm]
-fallback_version = "0.0.0"
+[project.urls]
+Homepage = "https://github.com/GilbertLabUCSF/CanDI"
+
+[project.scripts]
+candi-install = "CanDI.setup.install:main"
+candi-uninstall = "CanDI.setup.uninstall:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "test_*"]
