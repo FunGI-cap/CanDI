@@ -1,6 +1,0 @@
-pandas
-numpy
-polars
-anndata
-requests
-tqdm
