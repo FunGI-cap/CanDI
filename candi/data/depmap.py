@@ -32,7 +32,7 @@ class DepMapAPI:
         return urls
         
     def _list_depmap_urls(self):
-        urls = self._list_urls(subset=f"DepMap Public {self.version}", query_column='release')
+        urls = self._list_urls(subset_pattern=f"DepMap Public {self.version}", query_column='release')
         return urls
     
     def _download_dataset(self, urls, gzip):
