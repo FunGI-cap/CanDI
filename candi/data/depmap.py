@@ -42,11 +42,11 @@ class DepMapAPI:
         pbar = tqdm(
             total=len(urls_dict), 
             desc="Downloading datasets",
-            unit="file"
         )
         
         for filename, url in urls_dict.items():
             save_path = os.path.join(self.save_dir, filename)
+            pbar.update(1)
             #TODO add checksum verification to ensure file integrity after download
             if os.path.exists(save_path + ".gz"):
                 print(f"\t{filename}.gz already exists, skipping download.")
@@ -61,7 +61,7 @@ class DepMapAPI:
                     subprocess.run(["gzip", "-f", save_path], check=True)
             pbar.update(1)
         
-        pbar.colse()
+        pbar.close()
     
     def download_depmap_all(self, gzip=True):
         """Download all datasets for the specified version."""
