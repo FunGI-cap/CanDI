@@ -19,22 +19,35 @@ class DepMapAPI:
     def __init__(self, save_dir, version=LATEST_VERSION):
         self.version = version
         self.save_dir = save_dir + f"/{version}"
-        self.urls = pd.read_csv(FILES_URL)
+        self._files_table = pd.read_csv(FILES_URL)
 
-    def _list_depmap_urls(self, subset=None):
-        files_table = self.urls.copy()
-        urls = files_table.set_index('filename').query(f'release.str.contains("DepMap Public {self.version}")')
-        if subset is not None:
-            return urls[urls.index.str.contains(subset)]
+    def _list_urls(self, subset_pattern=None, query_column='release'):
+        urls = self._files_table.copy()
+        if subset_pattern:
+            urls = urls.query(
+                f'{query_column}.str.contains("{subset_pattern}")'
+            ).set_index('filename')
         else:
-            return urls
-
+            urls = urls.set_index('filename')
+        return urls
+        
+    def _list_depmap_urls(self):
+        urls = self._list_urls(subset=f"DepMap Public {self.version}", query_column='release')
+        return urls
+    
     def _download_dataset(self, urls, gzip):
 
         urls_dict = urls.loc[:, 'url'].to_dict()
 
-        for filename, url in tqdm(urls_dict.items(), desc="Downloading datasets", unit="file"):
+        pbar = tqdm(
+            total=len(urls_dict), 
+            desc="Downloading datasets",
+            unit="file"
+        )
+        
+        for filename, url in urls_dict.items():
             save_path = os.path.join(self.save_dir, filename)
+            #TODO add checksum verification to ensure file integrity after download
             if os.path.exists(save_path + ".gz"):
                 print(f"\t{filename}.gz already exists, skipping download.")
             elif os.path.exists(save_path):
@@ -46,20 +59,15 @@ class DepMapAPI:
                 subprocess.run(["wget", "-q", url, "-O", save_path], check=True)
                 if gzip:
                     subprocess.run(["gzip", "-f", save_path], check=True)
-            # #TODO add checksum verification to ensure file integrity after download
-            # else:
-            #     print(f"{filename} already exists, skipping download.")
+            pbar.update(1)
+        
+        pbar.colse()
     
-    def download_all(self, gzip=True):
+    def download_depmap_all(self, gzip=True):
         """Download all datasets for the specified version."""
         self._download_dataset(self._list_depmap_urls(),gzip=gzip)
-    
-    def download_subset(self, subset_pattern, gzip=True):
-        """Download a subset of datasets matching the given pattern."""
-        subset_urls = self._list_depmap_urls(subset=subset_pattern)
-        self._download_dataset(subset_urls, gzip=gzip)
-    
-    def download_essential(self, gzip=True):
+        
+    def download_depmap_essential(self, gzip=True):
         """Download only essential datasets for the specified version."""
         urls = self._list_depmap_urls()
         essential_files = [
@@ -75,6 +83,18 @@ class DepMapAPI:
         essential_urls = urls.loc[essential_files,:]
         
         self._download_dataset(essential_urls, gzip=gzip)
+
+    def download_subset(self, subset_pattern, query_column='release', gzip=True):
+        """Download a subset of datasets matching the given pattern.
+        This is useful for downloading specific datasets, e.g. 
+        `Harmonized PRISM` query for the PRISM drug response dataset.
+        """
+        urls = self._list_urls(subset_pattern=subset_pattern, query_column=query_column)
+        if urls.empty:
+            print(f"No datasets found matching pattern: {subset_pattern}")
+            return
+        self._download_dataset(urls, gzip=gzip)
+
 
 
 class DepMapData:
