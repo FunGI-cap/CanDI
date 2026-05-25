@@ -22,7 +22,7 @@ class CancerDataNamespace:
         if name == "_parent":
             object.__setattr__(self, name, value)
             return
-        self.add(name=name, dataset=value, overwrite=True)
+        self.add(name=name, dataset=value)
 
     def __dir__(self):
         return sorted(
@@ -39,8 +39,17 @@ class CancerDataNamespace:
             raise ValueError(
                 f"Dataset name '{name}' is not a valid Python identifier for attribute access."
             )
+        if name in object.__dir__(self):
+            raise ValueError(
+                f"Dataset name '{name}' conflicts with an existing namespace attribute."
+            )
         if name in self._parent._datasets and not overwrite:
             raise ValueError(
                 f"Dataset '{name}' is already loaded. Pass overwrite=True to replace it."
+            )
+        if name in self._parent._paths and not overwrite:
+            raise ValueError(
+                f"Dataset '{name}' is already defined as an available built-in dataset. "
+                f"Pass overwrite=True to replace it."
             )
         self._parent._datasets[name] = dataset
