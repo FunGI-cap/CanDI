@@ -5,7 +5,7 @@ import anndata as ad
 import pandas as pd
 from tqdm import tqdm
 
-from .cancer_database import CancerDataNamespace
+from ._database import CancerDataNamespace
 
 LATEST_VERSION = "26Q1"
 FILES_URL = 'https://depmap.org/portal/api/download/files'
