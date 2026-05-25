@@ -59,7 +59,6 @@ class DepMapAPI:
                 subprocess.run(["wget", "-q", url, "-O", save_path], check=True)
                 if gzip:
                     subprocess.run(["gzip", "-f", save_path], check=True)
-            pbar.update(1)
         
         pbar.close()
     
