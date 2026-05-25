@@ -126,7 +126,6 @@ class DepMapData:
             "OmicsCNSegmentsWGS": os.path.join(base, "OmicsCNSegmentsWGS.csv.gz"),
             "CRISPRGeneDependency": os.path.join(base, "CRISPRGeneDependency.csv.gz"),
             "CRISPRGeneEffect": os.path.join(base, "CRISPRGeneEffect.csv.gz"),
-            "PRISMDrugSensitivity": os.path.join(self.data_dir, "PRISM_fold_change_viability.h5ad.gz"),
         }
 
     def _check_paths_exist(self):
@@ -202,11 +201,6 @@ class DepMapData:
             elif engine == 'pandas':
                 data = pd.read_csv(path, index_col=0, **kwargs).set_index("ModelID")
 
-        elif name in {
-            "PRISMDrugSensitivity",
-            }:
-            data = ad.read_h5ad(path)
-        
         else:
             if engine == 'polars':
                 # NotImplementedError
