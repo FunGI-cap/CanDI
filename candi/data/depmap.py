@@ -1,8 +1,11 @@
 import os
 import subprocess
-import pandas as pd
+
 import anndata as ad
+import pandas as pd
 from tqdm import tqdm
+
+from ._database import CancerDataNamespace
 
 LATEST_VERSION = "26Q1"
 FILES_URL = 'https://depmap.org/portal/api/download/files'
@@ -65,7 +68,6 @@ class DepMapAPI:
             "OmicsSomaticMutationsMatrixDamaging.csv",
             "OmicsCNGeneWGS.csv",
             "CRISPRGeneDependency.csv",
-            "CRISPRScreenMap.csv",
             "CRISPRGeneEffect.csv",
             "OmicsCNSegmentsWGS.csv"
         ]
@@ -82,38 +84,17 @@ class DepMapData:
     Provides attribute-style access to datasets (e.g., obj.data.Model).
     """
 
-    class DataNamespace:
-        """Namespace object for accessing loaded datasets under .data with type hints for autocomplete."""
-        def __init__(self, parent):
-            self._parent = parent
+    class DataNamespace(CancerDataNamespace):
+        """Namespace object for dataset access under `.data`."""
 
-        ## DepMap main datasets ##
-        
-        # meta data
+        # DepMap main datasets
         Model: pd.DataFrame
-        # omics data
         OmicsExpression: pd.DataFrame
         OmicsSomaticMutations: pd.DataFrame
         OmicsSomaticMutationsMatrixDamaging: pd.DataFrame
         OmicsCNGeneWGS: pd.DataFrame
-        OmicsProteinAbundance: pd.DataFrame
-        # crispr data
         CRISPRGeneDependency: pd.DataFrame
         CRISPRGeneEffect: pd.DataFrame
-        # PRISM drug sensitivity data
-        CRISPRScreenMap: ad.AnnData
-        # Proteomic data
-        
-
-
-        def __getattr__(self, name):
-            if name in self._parent._datasets:
-                return self._parent._datasets[name]
-            if name in self._parent._paths:
-                raise AttributeError(
-                    f"Dataset '{name}' is available but not loaded. Call `.load('{name}')` first."
-                )
-            raise AttributeError(f"No dataset named '{name}' defined.")
 
     def __init__(self, data_dir, version=LATEST_VERSION):
         self.data_dir = data_dir
@@ -145,9 +126,7 @@ class DepMapData:
             "OmicsCNSegmentsWGS": os.path.join(base, "OmicsCNSegmentsWGS.csv.gz"),
             "CRISPRGeneDependency": os.path.join(base, "CRISPRGeneDependency.csv.gz"),
             "CRISPRGeneEffect": os.path.join(base, "CRISPRGeneEffect.csv.gz"),
-            "CRISPRScreenMap": os.path.join(base, "CRISPRScreenMap.csv.gz"),
             "PRISMDrugSensitivity": os.path.join(self.data_dir, "PRISM_fold_change_viability.h5ad.gz"),
-            "OmicsProteinAbundance": os.path.join(self.data_dir, "CCLE_protein_quantitation.tab")
         }
 
     def _check_paths_exist(self):
@@ -199,19 +178,6 @@ class DepMapData:
 
                 data = df.copy()
         
-        elif name in {
-            "OmicsProteinAbundance",
-            }:
-            if engine == 'polars':
-                # NotImplementedError
-                raise NotImplementedError("Polars engine is not yet implemented for loading datasets.")
-            elif engine == 'pandas':
-                df = pd.read_csv(path,  sep='\t', index_col=1, header=0).drop(columns=['UniprotID','EntrezID']).T
-                df.index.name = "ModelID"
-                df.columns.name = None
-
-                data = df.copy()
-
         elif name in {
             "OmicsExpression","OmicsCNGeneWGS",
             "OmicsSomaticMutationsMatrixDamaging",
@@ -266,7 +232,11 @@ class DepMapData:
 
     def list_available(self):
         """List all available datasets for this version."""
-        return list(self._paths.keys())
+        return list(dict.fromkeys([*self._paths.keys(), *self._datasets.keys()]))
+
+    def add_dataset(self, name, dataset, overwrite=False):
+        """Add a user-provided dataset to the in-memory namespace."""
+        self.data.add(name=name, dataset=dataset, overwrite=overwrite)
 
     def get(self, name):
         """Retrieve dataset if already loaded, otherwise prompt to load it."""
