@@ -1,10 +1,11 @@
 import os
 import subprocess
-from typing import Any
 
 import anndata as ad
 import pandas as pd
 from tqdm import tqdm
+
+from .cancer_database import CancerDataNamespace
 
 LATEST_VERSION = "26Q1"
 FILES_URL = 'https://depmap.org/portal/api/download/files'
@@ -83,13 +84,8 @@ class DepMapData:
     Provides attribute-style access to datasets (e.g., obj.data.Model).
     """
 
-    class DataNamespace:
+    class DataNamespace(CancerDataNamespace):
         """Namespace object for dataset access under `.data`."""
-
-        __slots__ = ("_parent",)
-
-        def __init__(self, parent: "DepMapData") -> None:
-            object.__setattr__(self, "_parent", parent)
 
         # DepMap main datasets
         Model: pd.DataFrame
@@ -99,42 +95,6 @@ class DepMapData:
         OmicsCNGeneWGS: pd.DataFrame
         CRISPRGeneDependency: pd.DataFrame
         CRISPRGeneEffect: pd.DataFrame
-
-        def __getattr__(self, name: str) -> Any:
-            if name in self._parent._datasets:
-                return self._parent._datasets[name]
-            if name in self._parent._paths:
-                raise AttributeError(
-                    f"Dataset '{name}' is available but not loaded. Call `.load('{name}')` first."
-                )
-            raise AttributeError(f"No dataset named '{name}' defined.")
-
-        def __setattr__(self, name: str, value: Any) -> None:
-            if name == "_parent":
-                object.__setattr__(self, name, value)
-                return
-            self.add(name=name, dataset=value, overwrite=True)
-
-        def __dir__(self):
-            return sorted(
-                set(super().__dir__())
-                | set(self._parent._paths)
-                | set(self._parent._datasets)
-            )
-
-        def add(self, name: str, dataset: Any, overwrite: bool = False) -> None:
-            """Add a dataset to this namespace."""
-            if not name or not isinstance(name, str):
-                raise ValueError("Dataset name must be a non-empty string.")
-            if not name.isidentifier():
-                raise ValueError(
-                    f"Dataset name '{name}' is not a valid Python identifier for attribute access."
-                )
-            if name in self._parent._datasets and not overwrite:
-                raise ValueError(
-                    f"Dataset '{name}' is already loaded. Pass overwrite=True to replace it."
-                )
-            self._parent._datasets[name] = dataset
 
     def __init__(self, data_dir, version=LATEST_VERSION):
         self.data_dir = data_dir
