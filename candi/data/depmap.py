@@ -19,9 +19,10 @@ class DepMapAPI:
     def __init__(self, save_dir, version=LATEST_VERSION):
         self.version = version
         self.save_dir = save_dir + f"/{version}"
+        self.urls = pd.read_csv(FILES_URL)
 
     def _list_depmap_urls(self, subset=None):
-        files_table = pd.read_csv(FILES_URL)
+        files_table = self.urls.copy()
         urls = files_table.set_index('filename').query(f'release.str.contains("DepMap Public {self.version}")')
         if subset is not None:
             return urls[urls.index.str.contains(subset)]
