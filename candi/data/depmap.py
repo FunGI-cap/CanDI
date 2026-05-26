@@ -3,6 +3,7 @@ import subprocess
 
 import anndata as ad
 import pandas as pd
+import polars as pl
 from tqdm import tqdm
 
 from ._database import CancerDataNamespace
@@ -156,7 +157,7 @@ class DepMapData:
                 f"The following dataset files are missing for version {self.version}: {', '.join(missing)}"
             )
 
-    def load(self, name, inplace=True, engine='pandas', **kwargs):
+    def load(self, name, inplace=True, engine='polars', **kwargs):
         """
         Load a dataset into memory.
 
@@ -168,10 +169,12 @@ class DepMapData:
             - If True: stores the dataset inside the object (retrievable via .data.<name> or .get()).
             - If False: returns the dataset as a DataFrame without storing.
         kwargs : dict
-            Additional arguments passed to pd.read_csv.
+            Additional arguments passed to the selected CSV reader.
         """
         if name not in self._paths:
             raise ValueError(f"Dataset {name} is not defined for version {self.version}.")
+        if engine not in {'pandas', 'polars'}:
+            raise ValueError("engine must be either 'pandas' or 'polars'.")
 
         if inplace and name in self._datasets:
             return self._datasets[name]  # Already loaded
@@ -180,53 +183,50 @@ class DepMapData:
         if not os.path.exists(path):
             raise FileNotFoundError(f"Dataset file not found: {path}")
 
+        def _read_csv(file_path, **read_kwargs):
+            if engine == 'pandas':
+                return pd.read_csv(file_path, **read_kwargs)
+
+            index_col = read_kwargs.pop("index_col", None)
+            data = pl.read_csv(file_path, **read_kwargs).to_pandas()
+            if index_col is not None:
+                if isinstance(index_col, int):
+                    data = data.set_index(data.columns[index_col])
+                else:
+                    data = data.set_index(index_col)
+            return data
+
         # Default loading logic
         if name == "Model":
-            df = pd.read_csv(path, **kwargs).set_index("ModelID")
+            df = _read_csv(path, **kwargs).set_index("ModelID")
             data = df.copy()
 
         elif name in {
             "CRISPRGeneDependency", "CRISPRGeneEffect"
             }:
-            if engine == 'polars':
-                # NotImplementedError
-                raise NotImplementedError("Polars engine is not yet implemented for loading datasets.")
-            elif engine == 'pandas':
-                df = pd.read_csv(path, index_col=0, **kwargs)
-                df.columns = df.columns.str.split(" ").str[0]
+            df = _read_csv(path, index_col=0, **kwargs)
+            df.columns = df.columns.str.split(" ").str[0]
 
-                data = df.copy()
+            data = df.copy()
         
         elif name in {
             "OmicsExpression","OmicsCNGeneWGS",
             "OmicsSomaticMutationsMatrixDamaging",
             }:
-            if engine == 'polars':
-                # NotImplementedError
-                raise NotImplementedError("Polars engine is not yet implemented for loading datasets.")
-            elif engine == 'pandas':
-                df = pd.read_csv(path, index_col=0, **kwargs).set_index("ModelID")
-                # only keep columns with " " 
-                df = df.loc[:, df.columns.str.contains(" ")].copy()
-                df.columns = df.columns.str.split(" ").str[0]
+            df = _read_csv(path, index_col=0, **kwargs).set_index("ModelID")
+            # only keep columns with " "
+            df = df.loc[:, df.columns.str.contains(" ")].copy()
+            df.columns = df.columns.str.split(" ").str[0]
 
-                data = df.copy()
+            data = df.copy()
 
         elif name in {
             "OmicsSomaticMutations",
             }:
-            if engine == 'polars':
-                # NotImplementedError
-                raise NotImplementedError("Polars engine is not yet implemented for loading datasets.")
-            elif engine == 'pandas':
-                data = pd.read_csv(path, index_col=0, **kwargs).set_index("ModelID")
+            data = _read_csv(path, index_col=0, **kwargs).set_index("ModelID")
 
         else:
-            if engine == 'polars':
-                # NotImplementedError
-                raise NotImplementedError("Polars engine is not yet implemented for loading datasets.")
-            elif engine == 'pandas':
-                data = pd.read_csv(path, **kwargs)
+            data = _read_csv(path, **kwargs)
         
         if inplace:
             self._datasets[name] = data
